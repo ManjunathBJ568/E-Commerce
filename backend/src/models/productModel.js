@@ -1,16 +1,31 @@
 const pool = require("../config/db");
 
 // Get all products, with category name joined in
+// Get all products, with category name and product image
 const getAllProducts = async () => {
     const [rows] = await pool.query(
-        `SELECT p.*, c.name AS category_name,
-                (SELECT pi.image_url FROM product_images pi 
-                 WHERE pi.product_id = p.id AND pi.is_primary = 1 LIMIT 1) AS primary_image
+        `SELECT 
+            p.*, 
+            c.name AS category_name,
+
+            (
+                SELECT pi.image_url
+                FROM product_images pi
+                WHERE pi.product_id = p.id
+                ORDER BY pi.is_primary DESC, pi.id ASC
+                LIMIT 1
+            ) AS primary_image
+
          FROM products p
-         JOIN categories c ON p.category_id = c.id
+
+         JOIN categories c 
+            ON p.category_id = c.id
+
          WHERE p.status = 'active'
+
          ORDER BY p.created_at DESC`
     );
+
     return rows;
 };
 
